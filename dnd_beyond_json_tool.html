@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Text Editor</title>
+  <style>
+    #editor {
+      width: 100%;
+      height: 200px;
+    }
+    #menu {
+      display: none;
+      position: absolute;
+      top: 50px;
+      left: 50px;
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 10px;
+    }
+    #addendumContainer {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<textarea id="editor"></textarea>
+<button id="openMenuButton">Open Menu</button>
+
+<div id="menu">
+  <label for="replacementText">Replacement Text:</label>
+  <input type="text" id="replacementText"><br>
+
+  <label for="font">Select Font:</label>
+  <select id="font">
+    <option value="" disabled selected>Select Font</option>
+    <option value="Arial">Arial</option>
+    <option value="Courier New">Courier New</option>
+    <option value="Times New Roman">Times New Roman</option>
+  </select><br>
+
+  <div id="addendumContainer">
+    <label for="addendum">Select Addendum:</label>
+    <select id="addendum">
+      <option value="">None</option>
+      <option value=" - Addendum 1">Addendum 1</option>
+      <option value=" - Addendum 2">Addendum 2</option>
+      <option value=" - Addendum 3">Addendum 3</option>
+    </select><br>
+  </div>
+
+  <button id="applyEditButton">Apply Edit</button>
+</div>
+
+<script>
+  const editor = document.getElementById('editor');
+  const openMenuButton = document.getElementById('openMenuButton');
+  const menu = document.getElementById('menu');
+  const replacementText = document.getElementById('replacementText');
+  const applyEditButton = document.getElementById('applyEditButton');
+  const addendumContainer = document.getElementById('addendumContainer');
+  const addendum = document.getElementById('addendum');
+  const fontDropdown = document.getElementById('font');
+
+  let start, end;
+
+  editor.addEventListener('select', () => {
+    start = editor.selectionStart;
+    end = editor.selectionEnd;
+  });
+
+  openMenuButton.addEventListener('click', () => {
+    if (start !== undefined && end !== undefined && start !== end) {
+      menu.style.display = 'block';
+      fontDropdown.selectedIndex = 0;  // Reset the font dropdown to the placeholder
+      addendumContainer.style.display = 'none';  // Hide the addendum dropdown initially
+    } else {
+      alert('Please select text first');
+    }
+  });
+
+  fontDropdown.addEventListener('change', () => {
+    if (fontDropdown.value === 'Arial') {
+      addendumContainer.style.display = 'block';
+    } else {
+      addendumContainer.style.display = 'none';
+    }
+  });
+
+  applyEditButton.addEventListener('click', () => {
+    const text = editor.value;
+    const before = text.slice(0, start);
+    const after = text.slice(end);
+    const font = fontDropdown.value;
+    const selectedAddendum = font === 'Arial' ? addendum.value : '';
+    const styledText = `<span style="font-family:${font};">${replacementText.value}${selectedAddendum}</span>`;
+    editor.value = before + styledText + after;
+    menu.style.display = 'none';
+  });
+</script>
+
+</body>
+</html>
