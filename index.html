@@ -18,7 +18,7 @@
       border: 1px solid #ccc;
       padding: 10px;
     }
-    #addendumContainer {
+    #replacementContainer, #addendumContainer {
       display: none;
     }
   </style>
@@ -29,16 +29,22 @@
 <button id="openMenuButton">Open Menu</button>
 
 <div id="menu">
-  <label for="replacementText">Replacement Text:</label>
-  <input type="text" id="replacementText"><br>
-
-  <label for="font">Select Font:</label>
-  <select id="font">
-    <option value="" disabled selected>Select Font</option>
-    <option value="Arial">Arial</option>
-    <option value="Courier New">Courier New</option>
-    <option value="Times New Roman">Times New Roman</option>
+  <label for="rollType">Select Roll Type:</label>
+  <select id="rollType">
+    <option value="" disabled selected>Select Roll Type</option>
+    <option value="roll">Generic Dice Roll</option>
+    <option value="check">Skill Check</option>
+    <option value="to hit">Attack Roll</option>
+    <option value="damage">Damage Roll</option>
+    <option value="heal">Healing Roll</option>
+    <option value="spell">Spell Attack Roll</option>
+    <option value="recharge">Recharge Roll</option>
   </select><br>
+
+  <div id="replacementContainer">
+    <label for="replacementText">Replacement Text:</label>
+    <input type="text" id="replacementText"><br>
+  </div>
 
   <div id="addendumContainer">
     <label for="addendum">Select Addendum:</label>
@@ -57,11 +63,12 @@
   const editor = document.getElementById('editor');
   const openMenuButton = document.getElementById('openMenuButton');
   const menu = document.getElementById('menu');
+  const replacementContainer = document.getElementById('replacementContainer');
   const replacementText = document.getElementById('replacementText');
   const applyEditButton = document.getElementById('applyEditButton');
   const addendumContainer = document.getElementById('addendumContainer');
   const addendum = document.getElementById('addendum');
-  const fontDropdown = document.getElementById('font');
+  const rollTypeDropdown = document.getElementById('rollType');
 
   let start, end;
 
@@ -73,17 +80,26 @@
   openMenuButton.addEventListener('click', () => {
     if (start !== undefined && end !== undefined && start !== end) {
       menu.style.display = 'block';
-      fontDropdown.selectedIndex = 0;  // Reset the font dropdown to the placeholder
+      rollTypeDropdown.selectedIndex = 0;  // Reset the roll type dropdown to the placeholder
+      replacementText.value = '';  // Clear the replacement text input
+      replacementContainer.style.display = 'none';  // Hide the replacement text input initially
       addendumContainer.style.display = 'none';  // Hide the addendum dropdown initially
+      addendum.selectedIndex = 0; // Reset the addendum dropdown to the default option
     } else {
       alert('Please select text first');
     }
   });
 
-  fontDropdown.addEventListener('change', () => {
-    if (fontDropdown.value === 'Arial') {
-      addendumContainer.style.display = 'block';
+  rollTypeDropdown.addEventListener('change', () => {
+    if (rollTypeDropdown.value) {
+      replacementContainer.style.display = 'block';
+      if (rollTypeDropdown.value === 'damage') {
+        addendumContainer.style.display = 'block';
+      } else {
+        addendumContainer.style.display = 'none';
+      }
     } else {
+      replacementContainer.style.display = 'none';
       addendumContainer.style.display = 'none';
     }
   });
@@ -92,9 +108,11 @@
     const text = editor.value;
     const before = text.slice(0, start);
     const after = text.slice(end);
-    const font = fontDropdown.value;
-    const selectedAddendum = font === 'Arial' ? addendum.value : '';
-    const styledText = `<span style="font-family:${font};">${replacementText.value}${selectedAddendum}</span>`;
+    const rollType = rollTypeDropdown.value;
+    const selectedAddendum = rollType === 'damage' ? addendum.value : '';
+    const formattedAddendum = `","rollDamageType":"${selectedAddendum}`
+    //const styledText = `<span style="roll-type:${rollType};">${replacementText.value}${selectedAddendum}</span>`;
+    const styledText = `[rollable]${text.slice(start, end)};{"diceNotation":"${diceNotation}","rollType":"${rollType}","rollAction":"${replacementText}${formattedAddendum}"}[/rollable]`;
     editor.value = before + styledText + after;
     menu.style.display = 'none';
   });
