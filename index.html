@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>D&D Beyond JSON Tool</title>
+  <title>Text Editor</title>
   <style>
     #editor {
       width: 100%;
       height: 200px;
     }
-    #menu {
+    #menu, #tooltipMenu {
       display: none;
       position: absolute;
       top: 50px;
@@ -27,6 +27,7 @@
 
 <textarea id="editor"></textarea>
 <button id="insertRollableButton">Insert Rollable</button>
+<button id="insertTooltipButton">Insert Tooltip</button>
 
 <div id="menu">
   <label for="rollType">Select Roll Type:</label>
@@ -71,21 +72,50 @@
     </select><br>
   </div>
 
-  <button id="applyEditButton">Apply Edit</button>
+  <button id="applyRollableButton">Apply Rollable</button>
+</div>
+
+<div id="tooltipMenu">
+  <label for="tooltipType">Select Tooltip Type:</label>
+  <select id="tooltipType">
+    <option value="" disabled selected>Select Tooltip Type</option>
+    <option value="action">Action</option>
+    <option value="condition">Condition</option>
+    <option value="item">Item</option>
+    <option value="magicItem">Magic Item</option>
+    <option value="monimg">Monster Image</option>
+    <option value="monster">Monster</option>
+    <option value="rule">Rule</option>
+    <option value="sense">Sense</option>
+    <option value="skill">Skill</option>
+    <option value="spell">Spell</option>
+    <option value="wprop">Weapon Property</option>
+    <option value="vehicle">Vehicle</option>
+  </select><br>
+
+  <label for="itemName">Item Name:</label>
+  <input type="text" id="itemName"><br>
+
+  <button id="applyTooltipButton">Apply Tooltip</button>
 </div>
 
 <script>
   const editor = document.getElementById('editor');
   const insertRollableButton = document.getElementById('insertRollableButton');
+  const insertTooltipButton = document.getElementById('insertTooltipButton');
   const menu = document.getElementById('menu');
+  const tooltipMenu = document.getElementById('tooltipMenu');
   const rollActionContainer = document.getElementById('rollActionContainer');
   const rollAction = document.getElementById('rollAction');
-  const applyEditButton = document.getElementById('applyEditButton');
+  const applyRollableButton = document.getElementById('applyRollableButton');
+  const applyTooltipButton = document.getElementById('applyTooltipButton');
   const damageTypeContainer = document.getElementById('damageTypeContainer');
   const damageType = document.getElementById('damageType');
   const rollTypeDropdown = document.getElementById('rollType');
   const diceNotationContainer = document.getElementById('diceNotationContainer');
   const diceNotation = document.getElementById('diceNotation');
+  const tooltipTypeDropdown = document.getElementById('tooltipType');
+  const itemName = document.getElementById('itemName');
 
   let start, end;
 
@@ -97,6 +127,7 @@
   insertRollableButton.addEventListener('click', () => {
     if (start !== undefined && end !== undefined && start !== end) {
       menu.style.display = 'block';
+      tooltipMenu.style.display = 'none';
       rollTypeDropdown.selectedIndex = 0;  // Reset the roll type dropdown to the placeholder
       diceNotation.value = '';  // Clear the dice notation input
       rollAction.value = '';  // Clear the roll action input
@@ -104,6 +135,17 @@
       rollActionContainer.style.display = 'none';  // Hide the roll action input initially
       damageTypeContainer.style.display = 'none';  // Hide the damage type dropdown initially
       damageType.selectedIndex = 0; // Reset the damage type dropdown to the default option
+    } else {
+      alert('Please select text first');
+    }
+  });
+
+  insertTooltipButton.addEventListener('click', () => {
+    if (start !== undefined && end !== undefined && start !== end) {
+      tooltipMenu.style.display = 'block';
+      menu.style.display = 'none';
+      tooltipTypeDropdown.selectedIndex = 0;  // Reset the tooltip type dropdown to the placeholder
+      itemName.value = '';  // Clear the item name input
     } else {
       alert('Please select text first');
     }
@@ -125,7 +167,7 @@
     }
   });
 
-  applyEditButton.addEventListener('click', () => {
+  applyRollableButton.addEventListener('click', () => {
     const text = editor.value;
     const before = text.slice(0, start);
     const after = text.slice(end);
@@ -135,6 +177,18 @@
     const styledText = `[rollable]${text.slice(start, end)};{"diceNotation":"${diceNotation.value}","rollType":"${rollType}","rollAction":"${rollAction.value}${formattedDamageType}"}[/rollable]`;
     editor.value = before + styledText + after;
     menu.style.display = 'none';
+  });
+
+  applyTooltipButton.addEventListener('click', () => {
+    const text = editor.value.slice(start, end);
+    const before = editor.value.slice(0, start);
+    const after = editor.value.slice(end);
+    const tooltipType = tooltipTypeDropdown.value;
+    const itemNameValue = itemName.value;
+    const separator = itemNameValue && itemNameValue !== text ? ';' : '';
+    const styledText = `[${tooltipType}]${itemNameValue}${separator}${text}[/${tooltipType}]`;
+    editor.value = before + styledText + after;
+    tooltipMenu.style.display = 'none';
   });
 </script>
 
