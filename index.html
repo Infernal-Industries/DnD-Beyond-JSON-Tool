@@ -3,31 +3,51 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Text Editor</title>
+  <title>D&D Beyond JSON Tool</title>
   <style>
     #editor {
       width: 100%;
       height: 200px;
     }
-    #menu, #tooltipMenu {
+    #menu, #tooltipMenu, #snippetCodeMenu {
       display: none;
       position: absolute;
-      top: 50px;
+      top: 100px;
       left: 50px;
       background: #fff;
       border: 1px solid #ccc;
       padding: 10px;
     }
-    #rollActionContainer, #damageTypeContainer, #diceNotationContainer {
+    #rollActionContainer, #damageTypeContainer, #diceNotationContainer, #abilityScoreContainer, #roundingContainer, #minContainer, #maxContainer, #signModifiersContainer, #prefixOperatorsContainer, #suffixOperatorsContainer {
       display: none;
+    }
+    textarea, input[type="text"] {
+      width: 100%;
+      box-sizing: border-box;
+      height: 1.5em; /* Set height to one line of text */
+    }
+    #info {
+      margin-bottom: 20px;
+    }
+    h1 {
+      text-align: center;
     }
   </style>
 </head>
 <body>
 
+<h1>D&D Beyond JSON Tool</h1>
+<div id="info">
+  <p><strong>Note:</strong> You must highlight text for Rollable and Tooltip inserts, but not for Snippet Code inserts.</p>
+  <p><strong>Rollable Menu:</strong> All fields are required.</p>
+  <p><strong>Tooltip Menu:</strong> All fields are required.</p>
+  <p><strong>Snippet Code Menu:</strong> Only the Snippet Code Type is required. Other fields are optional.</p>
+</div>
+
 <textarea id="editor"></textarea>
 <button id="insertRollableButton">Insert Rollable</button>
 <button id="insertTooltipButton">Insert Tooltip</button>
+<button id="insertSnippetCodeButton">Insert Snippet Code</button>
 
 <div id="menu">
   <label for="rollType">Select Roll Type:</label>
@@ -99,16 +119,91 @@
   <button id="applyTooltipButton">Apply Tooltip</button>
 </div>
 
+<div id="snippetCodeMenu">
+  <label for="snippetCodeBase">Select Snippet Code Base:</label>
+  <select id="snippetCodeBase">
+    <option value="" disabled selected>Select Snippet Code Base</option>
+    <option value="spellattack">Spell Attack</option>
+    <option value="scalevalue">Scale Value</option>
+    <option value="modifier">Modifier</option>
+    <option value="savedc">Save DC</option>
+    <option value="fixedvalue">Fixed Value</option>
+    <option value="classlevel">Class Level</option>
+    <option value="characterlevel">Character Level</option>
+    <option value="proficiency">Proficiency</option>
+    <option value="maxhp">Max HP</option>
+    <option value="limiteduse">Limited Use</option>
+    <option value="abilityscore">Ability Score</option>
+  </select><br>
+
+  <div id="abilityScoreContainer">
+    <label for="abilityScore">Select Ability Score:</label>
+    <select id="abilityScore">
+      <option value="str">Strength</option>
+      <option value="dex">Dexterity</option>
+      <option value="con">Constitution</option>
+      <option value="int">Intelligence</option>
+      <option value="wis">Wisdom</option>
+      <option value="cha">Charisma</option>
+    </select><br>
+  </div>
+
+  <div id="prefixOperatorsContainer">
+    <label for="prefixOperators">Enter Prefix Operators:</label>
+    <input type="text" id="prefixOperators" placeholder="e.g. 10+"><br>
+  </div>
+
+  <div id="roundingContainer">
+    <label for="rounding">Rounding:</label>
+    <select id="rounding">
+      <option value="" selected>None</option>
+      <option value="rounddown">Round Down</option>
+      <option value="roundup">Round Up</option>
+    </select><br>
+  </div>
+
+  <div id="minContainer">
+    <input type="checkbox" id="minCheckbox">
+    <label for="minCheckbox">Minimum Value</label>
+    <input type="text" id="minValue" placeholder="e.g. 2" style="display:none;"><br>
+  </div>
+
+  <div id="maxContainer">
+    <input type="checkbox" id="maxCheckbox">
+    <label for="maxCheckbox">Maximum Value</label>
+    <input type="text" id="maxValue" placeholder="e.g. 20" style="display:none;"><br>
+  </div>
+
+  <div id="signModifiersContainer">
+    <label for="signModifiers">Sign Modifiers:</label>
+    <select id="signModifiers">
+      <option value="" selected>None</option>
+      <option value="signed">Signed</option>
+      <option value="unsigned">Unsigned</option>
+    </select><br>
+  </div>
+
+  <div id="suffixOperatorsContainer">
+    <label for="suffixOperators">Enter Suffix Operators:</label>
+    <input type="text" id="suffixOperators" placeholder="e.g. -2"><br>
+  </div>
+
+  <button id="applySnippetCodeButton">Apply Snippet Code</button>
+</div>
+
 <script>
   const editor = document.getElementById('editor');
   const insertRollableButton = document.getElementById('insertRollableButton');
   const insertTooltipButton = document.getElementById('insertTooltipButton');
+  const insertSnippetCodeButton = document.getElementById('insertSnippetCodeButton');
   const menu = document.getElementById('menu');
   const tooltipMenu = document.getElementById('tooltipMenu');
+  const snippetCodeMenu = document.getElementById('snippetCodeMenu');
   const rollActionContainer = document.getElementById('rollActionContainer');
   const rollAction = document.getElementById('rollAction');
   const applyRollableButton = document.getElementById('applyRollableButton');
   const applyTooltipButton = document.getElementById('applyTooltipButton');
+  const applySnippetCodeButton = document.getElementById('applySnippetCodeButton');
   const damageTypeContainer = document.getElementById('damageTypeContainer');
   const damageType = document.getElementById('damageType');
   const rollTypeDropdown = document.getElementById('rollType');
@@ -116,6 +211,22 @@
   const diceNotation = document.getElementById('diceNotation');
   const tooltipTypeDropdown = document.getElementById('tooltipType');
   const itemName = document.getElementById('itemName');
+  const snippetCodeBase = document.getElementById('snippetCodeBase');
+  const abilityScoreContainer = document.getElementById('abilityScoreContainer');
+  const abilityScore = document.getElementById('abilityScore');
+  const prefixOperatorsContainer = document.getElementById('prefixOperatorsContainer');
+  const prefixOperators = document.getElementById('prefixOperators');
+  const rounding = document.getElementById('rounding');
+  const minContainer = document.getElementById('minContainer');
+  const minCheckbox = document.getElementById('minCheckbox');
+  const minValue = document.getElementById('minValue');
+  const maxContainer = document.getElementById('maxContainer');
+  const maxCheckbox = document.getElementById('maxCheckbox');
+  const maxValue = document.getElementById('maxValue');
+  const signModifiersContainer = document.getElementById('signModifiersContainer');
+  const signModifiers = document.getElementById('signModifiers');
+  const suffixOperatorsContainer = document.getElementById('suffixOperatorsContainer');
+  const suffixOperators = document.getElementById('suffixOperators');
 
   let start, end;
 
@@ -128,6 +239,7 @@
     if (start !== undefined && end !== undefined && start !== end) {
       menu.style.display = 'block';
       tooltipMenu.style.display = 'none';
+      snippetCodeMenu.style.display = 'none';
       rollTypeDropdown.selectedIndex = 0;  // Reset the roll type dropdown to the placeholder
       diceNotation.value = '';  // Clear the dice notation input
       rollAction.value = '';  // Clear the roll action input
@@ -144,11 +256,44 @@
     if (start !== undefined && end !== undefined && start !== end) {
       tooltipMenu.style.display = 'block';
       menu.style.display = 'none';
+      snippetCodeMenu.style.display = 'none';
       tooltipTypeDropdown.selectedIndex = 0;  // Reset the tooltip type dropdown to the placeholder
       itemName.value = '';  // Clear the item name input
     } else {
       alert('Please select text first');
     }
+  });
+
+  insertSnippetCodeButton.addEventListener('click', () => {
+    snippetCodeMenu.style.display = 'block';
+    menu.style.display = 'none';
+    tooltipMenu.style.display = 'none';
+    snippetCodeBase.selectedIndex = 0;  // Reset the snippet code base dropdown to the placeholder
+    abilityScoreContainer.style.display = 'none'; // Hide the ability score dropdown initially
+    prefixOperators.value = '';  // Clear the prefix operators input
+    rounding.value = '';  // Clear the rounding dropdown
+    minCheckbox.checked = false;
+    minValue.value = '';  // Clear the min value input
+    minValue.style.display = 'none'; // Hide the min value input
+    maxCheckbox.checked = false;
+    maxValue.value = '';  // Clear the max value input
+    maxValue.style.display = 'none'; // Hide the max value input
+    signModifiers.value = '';  // Clear the sign modifiers dropdown
+    suffixOperators.value = '';  // Clear the suffix operators input
+  });
+
+  snippetCodeBase.addEventListener('change', () => {
+    if (['spellattack', 'modifier', 'savedc', 'abilityscore'].includes(snippetCodeBase.value)) {
+      abilityScoreContainer.style.display = 'block';
+    } else {
+      abilityScoreContainer.style.display = 'none';
+    }
+    prefixOperatorsContainer.style.display = 'block';
+    roundingContainer.style.display = 'block';
+    minContainer.style.display = 'block';
+    maxContainer.style.display = 'block';
+    signModifiersContainer.style.display = 'block';
+    suffixOperatorsContainer.style.display = 'block';
   });
 
   rollTypeDropdown.addEventListener('change', () => {
@@ -164,6 +309,22 @@
       diceNotationContainer.style.display = 'none';
       rollActionContainer.style.display = 'none';
       damageTypeContainer.style.display = 'none';
+    }
+  });
+
+  minCheckbox.addEventListener('change', () => {
+    if (minCheckbox.checked) {
+      minValue.style.display = 'inline';
+    } else {
+      minValue.style.display = 'none';
+    }
+  });
+
+  maxCheckbox.addEventListener('change', () => {
+    if (maxCheckbox.checked) {
+      maxValue.style.display = 'inline';
+    } else {
+      maxValue.style.display = 'none';
     }
   });
 
@@ -189,6 +350,31 @@
     const styledText = `[${tooltipType}]${itemNameValue}${separator}${text}[/${tooltipType}]`;
     editor.value = before + styledText + after;
     tooltipMenu.style.display = 'none';
+  });
+
+  applySnippetCodeButton.addEventListener('click', () => {
+    const text = editor.value;
+    const before = text.slice(0, start);
+    const after = text.slice(end);
+    const snippetCodeBaseValue = snippetCodeBase.value;
+    const abilityScoreValue = abilityScoreContainer.style.display === 'block' ? `:${abilityScore.value}` : '';
+    const prefixOperatorsValue = prefixOperators.value ? prefixOperators.value : '';
+    const suffixOperatorsValue = suffixOperators.value ? suffixOperators.value : '';
+    const roundingValue = rounding.value ? rounding.value : '';
+    const minValueValue = minCheckbox.checked && minValue.value ? `min:${minValue.value}` : '';
+    const maxValueValue = maxCheckbox.checked && maxValue.value ? `max:${maxValue.value}` : '';
+    const calculationModifiersArray = [roundingValue, minValueValue, maxValueValue].filter(Boolean);
+    const calculationModifiersValue = calculationModifiersArray.length > 0 ? `@${calculationModifiersArray.join(',')}` : '';
+    const signModifiersValue = signModifiers.value ? `#${signModifiers.value}` : '';
+
+    let snippetCode = `${prefixOperatorsValue}${snippetCodeBaseValue}${abilityScoreValue}${suffixOperatorsValue}${calculationModifiersValue}${signModifiersValue}`;
+    if (prefixOperatorsValue || suffixOperatorsValue || calculationModifiersValue) {
+      snippetCode = `(${prefixOperatorsValue}${snippetCodeBaseValue}${abilityScoreValue}${suffixOperatorsValue})${calculationModifiersValue}${signModifiersValue}`;
+    }
+
+    const styledText = `{{${snippetCode.replace(/@@/g, '@')}}}`;
+    editor.value = before + styledText + after;
+    snippetCodeMenu.style.display = 'none';
   });
 </script>
 
