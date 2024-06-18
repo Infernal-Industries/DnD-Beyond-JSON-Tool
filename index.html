@@ -18,7 +18,7 @@
       border: 1px solid #ccc;
       padding: 10px;
     }
-    #replacementContainer, #addendumContainer {
+    #rollActionContainer, #damageTypeContainer, #diceNotationContainer {
       display: none;
     }
   </style>
@@ -41,18 +41,33 @@
     <option value="recharge">Recharge Roll</option>
   </select><br>
 
-  <div id="replacementContainer">
-    <label for="replacementText">Replacement Text:</label>
-    <input type="text" id="replacementText"><br>
+  <div id="diceNotationContainer">
+    <label for="diceNotation">Dice Notation:</label>
+    <input type="text" id="diceNotation"><br>
   </div>
 
-  <div id="addendumContainer">
-    <label for="addendum">Select Addendum:</label>
-    <select id="addendum">
-      <option value="">None</option>
-      <option value=" - Addendum 1">Addendum 1</option>
-      <option value=" - Addendum 2">Addendum 2</option>
-      <option value=" - Addendum 3">Addendum 3</option>
+  <div id="rollActionContainer">
+    <label for="rollAction">Roll Action:</label>
+    <input type="text" id="rollAction"><br>
+  </div>
+
+  <div id="damageTypeContainer">
+    <label for="damageType">Select Damage Type:</label>
+    <select id="damageType">
+      <option value="" disabled selected>Select Damage Type</option>
+      <option value="acid">Acid</option>
+      <option value="bludgeoning">Bludgeoning</option>
+      <option value="cold">Cold</option>
+      <option value="fire">Fire</option>
+      <option value="force">Force</option>
+      <option value="lightning">Lightning</option>
+      <option value="necrotic">Necrotic</option>
+      <option value="piercing">Piercing</option>
+      <option value="poison">Poison</option>
+      <option value="psychic">Psychic</option>
+      <option value="radiant">Radiant</option>
+      <option value="slashing">Slashing</option>
+      <option value="thunder">Thunder</option>
     </select><br>
   </div>
 
@@ -63,12 +78,14 @@
   const editor = document.getElementById('editor');
   const openMenuButton = document.getElementById('openMenuButton');
   const menu = document.getElementById('menu');
-  const replacementContainer = document.getElementById('replacementContainer');
-  const replacementText = document.getElementById('replacementText');
+  const rollActionContainer = document.getElementById('rollActionContainer');
+  const rollAction = document.getElementById('rollAction');
   const applyEditButton = document.getElementById('applyEditButton');
-  const addendumContainer = document.getElementById('addendumContainer');
-  const addendum = document.getElementById('addendum');
+  const damageTypeContainer = document.getElementById('damageTypeContainer');
+  const damageType = document.getElementById('damageType');
   const rollTypeDropdown = document.getElementById('rollType');
+  const diceNotationContainer = document.getElementById('diceNotationContainer');
+  const diceNotation = document.getElementById('diceNotation');
 
   let start, end;
 
@@ -81,10 +98,12 @@
     if (start !== undefined && end !== undefined && start !== end) {
       menu.style.display = 'block';
       rollTypeDropdown.selectedIndex = 0;  // Reset the roll type dropdown to the placeholder
-      replacementText.value = '';  // Clear the replacement text input
-      replacementContainer.style.display = 'none';  // Hide the replacement text input initially
-      addendumContainer.style.display = 'none';  // Hide the addendum dropdown initially
-      addendum.selectedIndex = 0; // Reset the addendum dropdown to the default option
+      diceNotation.value = '';  // Clear the dice notation input
+      rollAction.value = '';  // Clear the roll action input
+      diceNotationContainer.style.display = 'none';  // Hide the dice notation input initially
+      rollActionContainer.style.display = 'none';  // Hide the roll action input initially
+      damageTypeContainer.style.display = 'none';  // Hide the damage type dropdown initially
+      damageType.selectedIndex = 0; // Reset the damage type dropdown to the default option
     } else {
       alert('Please select text first');
     }
@@ -92,15 +111,17 @@
 
   rollTypeDropdown.addEventListener('change', () => {
     if (rollTypeDropdown.value) {
-      replacementContainer.style.display = 'block';
+      diceNotationContainer.style.display = 'block';
+      rollActionContainer.style.display = 'block';
       if (rollTypeDropdown.value === 'damage') {
-        addendumContainer.style.display = 'block';
+        damageTypeContainer.style.display = 'block';
       } else {
-        addendumContainer.style.display = 'none';
+        damageTypeContainer.style.display = 'none';
       }
     } else {
-      replacementContainer.style.display = 'none';
-      addendumContainer.style.display = 'none';
+      diceNotationContainer.style.display = 'none';
+      rollActionContainer.style.display = 'none';
+      damageTypeContainer.style.display = 'none';
     }
   });
 
@@ -109,10 +130,9 @@
     const before = text.slice(0, start);
     const after = text.slice(end);
     const rollType = rollTypeDropdown.value;
-    const selectedAddendum = rollType === 'damage' ? addendum.value : '';
-    const formattedAddendum = `","rollDamageType":"${selectedAddendum}`
-    //const styledText = `<span style="roll-type:${rollType};">${replacementText.value}${selectedAddendum}</span>`;
-    const styledText = `[rollable]${text.slice(start, end)};{"diceNotation":"${diceNotation}","rollType":"${rollType}","rollAction":"${replacementText}${formattedAddendum}"}[/rollable]`;
+    const selectedDamageType = rollType === 'damage' ? damageType.value : '';
+    const formattedDamageType = selectedDamageType ? `","rollDamageType":"${selectedDamageType}` : '';
+    const styledText = `[rollable]${text.slice(start, end)};{"diceNotation":"${diceNotation.value}","rollType":"${rollType}","rollAction":"${rollAction.value}${formattedDamageType}"}[/rollable]`;
     editor.value = before + styledText + after;
     menu.style.display = 'none';
   });
