@@ -26,7 +26,7 @@
 <body>
 
 <textarea id="editor"></textarea>
-<button id="openMenuButton">Open Menu</button>
+<button id="insertRollableButton">Insert Rollable</button>
 
 <div id="menu">
   <label for="rollType">Select Roll Type:</label>
@@ -76,7 +76,7 @@
 
 <script>
   const editor = document.getElementById('editor');
-  const openMenuButton = document.getElementById('openMenuButton');
+  const insertRollableButton = document.getElementById('insertRollableButton');
   const menu = document.getElementById('menu');
   const rollActionContainer = document.getElementById('rollActionContainer');
   const rollAction = document.getElementById('rollAction');
@@ -94,7 +94,7 @@
     end = editor.selectionEnd;
   });
 
-  openMenuButton.addEventListener('click', () => {
+  insertRollableButton.addEventListener('click', () => {
     if (start !== undefined && end !== undefined && start !== end) {
       menu.style.display = 'block';
       rollTypeDropdown.selectedIndex = 0;  // Reset the roll type dropdown to the placeholder
